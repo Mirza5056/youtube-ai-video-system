@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import axios from "axios"
 
-const API_URL = "https://youtube-ai-video-system.onrender.com/process-video";
+const API_URL = " http://127.0.0.1:8000/process-video";
 
 function getVideoId(url) {
   try {

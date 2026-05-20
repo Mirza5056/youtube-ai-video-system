@@ -6,7 +6,7 @@ load_dotenv()
 HF_TOKEN = os.getenv("HF_TOKEN")
 API_KEY = os.getenv("API_KEY")
 def generate_summary(caption: str) -> str:
-    caption = caption[:1500]
+    caption = caption[:2000]
     # prompt = f"Summarize the following text in 3 clear bullet points:\n\n{caption}\n\nSummary:"
     prompt = f"""Create a professional summary of this YouTube video transcript.
     Include:

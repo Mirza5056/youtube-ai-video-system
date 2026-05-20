@@ -19,12 +19,17 @@ def get_captions(url: str) -> str:
         params={"url": url, "text": True},
         timeout=30
     )
-
     if response.status_code != 200:
         raise ValueError(f"Could not fetch transcript: {response.text}")
-
     data = response.json()
-    return data.get("content", "")
+    content = data.get("content","")
+    if isinstance(content,list):
+        return "".join(chunk["text"] if isinstance(chunk,dict) else str(chunk)
+        for chunk in content
+        )
+    if isinstance(content,str):
+        return content
+    raise ValueError(f"Unexpected content format {type(content)} : {content}")
 
 # def get_captions(url):
 #     try:
