@@ -29,7 +29,7 @@ def generate_summary(caption: str) -> str:
                     "do_sample": False
                 }
             },
-            timeout=30
+            timeout=70
         )
         if response.status_code == 503:
             print("Model loading, retrying in 15s...")
