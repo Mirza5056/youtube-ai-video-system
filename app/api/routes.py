@@ -7,6 +7,7 @@ from yt_dlp import YoutubeDL
 from app.services.downloader import get_captions
 from app.services.summarizer import generate_summary
 from app.services.sentence_transformers import create_embeddings
+from app.services.sentence_transformers import get_embeddings
 from sentence_transformers import SentenceTransformer
 # from app.db.database import save_video
 from app.model.video import VideoRequest,VideoResponse
@@ -64,7 +65,7 @@ async def process_video(data: VideoRequest):
         
         chunks,embeddings = create_embeddings(data.url)
         for i,chunk in enumerate(chunks):
-            collection.add(documents=[chunk], embeddings=[embeddings[i].tolist()], ids=[f"{title}_{i}"])
+            collection.add(documents=[chunk], embeddings=[embeddings[i]], ids=[f"{title}_{i}"])
         
         # chunks = caption.split(".")
         # model = SentenceTransformer("BAAI/bge-small-en-v1.5")
@@ -112,13 +113,13 @@ async def ask_question(data : QuestionsRequest):
     try:
         chunks,embeddings = create_embeddings(data.video_url)
         for i,chunk in enumerate(chunks):
-            collection.add(documents=[chunk],embeddings=[embeddings[i].tolist()],
+            collection.add(documents=[chunk],embeddings=[embeddings[i]],
             ids=[f"{data.video_url}_{i}"]
             )
 
-        query_embedding = model.encode(data.query)
+        query_embedding = get_embeddings(data.query)
         results = collection.query(
-            query_embeddings=[query_embedding.tolist()],n_results=3
+            query_embeddings=[query_embedding],n_results=3
         )
         documents = results["documents"][0]
         context = "\n".join(documents)
