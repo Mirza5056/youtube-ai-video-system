@@ -1,14 +1,32 @@
 from fastapi import APIRouter,HTTPException
+from sentence_transformers import SentenceTransformer
 from pydantic import BaseModel
 import requests
 from pytube import YouTube
 from yt_dlp import YoutubeDL
 from app.services.downloader import get_captions
 from app.services.summarizer import generate_summary
+from app.services.sentence_transformers import create_embeddings
+from sentence_transformers import SentenceTransformer
 # from app.db.database import save_video
 from app.model.video import VideoRequest,VideoResponse
+from groq import Groq
+from dotenv import load_dotenv
+import os
+import chromadb
 
+load_dotenv()
+client1 = Groq(
+    api_key = os.getenv("GROQ_API_KEY")
+)
+client = chromadb.Client()
+collection = client.create_collection("youtube-rag")
+model = SentenceTransformer("BAAI/bge-small-en-v1.5")
 router = APIRouter()
+
+class QuestionsRequest(BaseModel):
+    video_url : str
+    query : str
 
 # class VideoRequest(BaseModel):
 #     url:str
@@ -41,8 +59,25 @@ async def process_video(data: VideoRequest):
         #     info = ydl.extract_info(data.url, download=False)
         #     title = info["title"] 
         # yt = YouTube(data.url)
-        caption = get_captions(data.url)
-        summary = generate_summary(caption)
+
+        # caption = get_captions(data.url)
+        
+        chunks,embeddings = create_embeddings(data.url)
+        for i,chunk in enumerate(chunks):
+            collection.add(documents=[chunk], embeddings=[embeddings[i].tolist()], ids=[f"{title}_{i}"])
+        
+        # chunks = caption.split(".")
+        # model = SentenceTransformer("BAAI/bge-small-en-v1.5")
+        # embeddings = model.encode(chunks)
+        # for i,chunk in enumerate(chunks):
+        #     collection.add(documents=[chunk], embeddings=[embeddings[i].tolist()], ids=[str(i)])
+        # query=input("Enter a query to fetch ")
+        # query_embedding = model.encode(query)
+        # results = collection.query(query_embeddings=[query_embedding.tolist()],n_results=3)
+        # print(results["documents"])
+
+        #summary = generate_summary(caption)
+        
         # print(f"Video caption {caption}")
         # print(f"summary {summary}")
         # print("code comes here!!!!")
@@ -59,8 +94,9 @@ async def process_video(data: VideoRequest):
         #     created_at=video["created_at"]
         # )
         return {
-            "title" : title,
-            "summary" : summary
+            "message" : "Video process successfull.",
+            "title" : title
+            # "summary" : summary
         }
     except ValueError as e:
         print(f"ValueError: {e}")
@@ -70,3 +106,42 @@ async def process_video(data: VideoRequest):
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500,detail=str(e))
+
+@router.post("/ask-question")
+async def ask_question(data : QuestionsRequest):
+    try:
+        chunks,embeddings = create_embeddings(data.video_url)
+        for i,chunk in enumerate(chunks):
+            collection.add(documents=[chunk],embeddings=[embeddings[i].tolist()],
+            ids=[f"{data.video_url}_{i}"]
+            )
+
+        query_embedding = model.encode(data.query)
+        results = collection.query(
+            query_embeddings=[query_embedding.tolist()],n_results=3
+        )
+        documents = results["documents"][0]
+        context = "\n".join(documents)
+        prompt = f"""Answer using this context only
+        Context 
+        {context}
+
+        Question:
+        {data.query}
+        """
+        response = client1.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[
+                {
+                    "role" : "user",
+                    "content" : prompt
+                }
+            ]
+        )
+        answer = response.choices[0].message.content
+        return {
+            "query" : data.query,
+            "answer" : answer
+        }
+    except Exception as e:
+        return {"error" : str(e)}
