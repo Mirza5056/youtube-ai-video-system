@@ -1,5 +1,4 @@
 from fastapi import APIRouter,HTTPException
-from sentence_transformers import SentenceTransformer
 from pydantic import BaseModel
 import requests
 from pytube import YouTube
@@ -8,7 +7,7 @@ from app.services.downloader import get_captions
 from app.services.summarizer import generate_summary
 from app.services.sentence_transformers import create_embeddings
 from app.services.sentence_transformers import get_embeddings
-from sentence_transformers import SentenceTransformer
+# from sentence_transformers import SentenceTransformer
 # from app.db.database import save_video
 from app.model.video import VideoRequest,VideoResponse
 from app.services.pinecode_db import index
@@ -23,7 +22,7 @@ client1 = Groq(
 )
 client = chromadb.Client()
 collection = client.create_collection("youtube-rag")
-model = SentenceTransformer("BAAI/bge-small-en-v1.5")
+# model = SentenceTransformer("BAAI/bge-small-en-v1.5")
 router = APIRouter()
 
 class QuestionsRequest(BaseModel):
