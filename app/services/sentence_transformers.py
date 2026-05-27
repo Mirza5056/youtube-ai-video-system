@@ -24,7 +24,8 @@ def get_embeddings(text):
             timeout = 70
         )
         response.raise_for_status()
-        return response.json()[0]
+        data = response.json()
+        return data
     except requests.exceptions.RequestException as e:
         raise Exception(f"HuggingFace API Error: {str(e)}")
 

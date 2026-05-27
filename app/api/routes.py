@@ -11,6 +11,7 @@ from app.services.sentence_transformers import get_embeddings
 from sentence_transformers import SentenceTransformer
 # from app.db.database import save_video
 from app.model.video import VideoRequest,VideoResponse
+from app.services.pinecode_db import index
 from groq import Groq
 from dotenv import load_dotenv
 import os
@@ -113,16 +114,37 @@ async def ask_question(data : QuestionsRequest):
     try:
         chunks,embeddings = create_embeddings(data.video_url)
         for i,chunk in enumerate(chunks):
-            collection.add(documents=[chunk],embeddings=[embeddings[i]],
-            ids=[f"{data.video_url}_{i}"]
+            # collection.add(documents=[chunk],embeddings=[embeddings[i]],
+            # ids=[f"{data.video_url}_{i}"]
+            # )
+            # above code is used chromadb and using pincone
+            index.upsert(
+                vectors=[
+                    {
+                        "id": f"{data.video_url}_{i}",
+                        "values": embeddings[i],
+                        "metadata": {
+                            "text": chunk,
+                            "video_url": data.video_url
+                        }
+                    }
+                ]
             )
 
         query_embedding = get_embeddings(data.query)
-        results = collection.query(
-            query_embeddings=[query_embedding],n_results=3
+        # results = collection.query(
+        #     query_embeddings=[query_embedding],n_results=3
+        # )
+        # replacing this code also
+        results = index.query(
+            vector=query_embedding,
+            top_k=3,
+            include_metadata=True
         )
-        documents = results["documents"][0]
-        context = "\n".join(documents)
+        # documents = results["documents"][0]
+        # context = "\n".join(documents)
+        matches = results["matches"]
+        context="\n".join(match["metadata"]["text"] for match in matches)
         prompt = f"""Answer using this context only
         Context 
         {context}
