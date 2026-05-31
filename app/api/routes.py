@@ -67,8 +67,21 @@ async def process_video(data: VideoRequest):
         # caption = get_captions(data.url)
         
         chunks,embeddings = create_embeddings(data.url)
-        for i,chunk in enumerate(chunks):
-            collection.add(documents=[chunk], embeddings=[embeddings[i]], ids=[f"{title}_{i}"])
+        for i, chunk in enumerate(chunks):
+            index.upsert(
+                vectors=[
+                {
+                    "id": f"{title}_{i}",
+                    "values": embeddings[i],
+                        "metadata": {
+                        "text": chunk,
+                        "title": title
+                    }
+                }
+            ]
+        )
+        # for i,chunk in enumerate(chunks):
+            # collection.add(documents=[chunk], embeddings=[embeddings[i]], ids=[f"{title}_{i}"])
         
         # chunks = caption.split(".")
         # model = SentenceTransformer("BAAI/bge-small-en-v1.5")
