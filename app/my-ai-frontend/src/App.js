@@ -2,8 +2,8 @@ import { useState, useRef, useEffect } from "react";
 import axios from "axios"
 
 // const API_URL = "https://youtube-ai-video-system.onrender.com/process-video";
-const API_URL = " http://127.0.0.1:8000/process-video";
-const CHAT_API_URL = "http://127.0.0.1:8000/ask-question"
+const API_URL = " https://youtube-ai-video-system.onrender.com/process-video";
+const CHAT_API_URL = "https://youtube-ai-video-system.onrender.com/ask-question"
 
 function getVideoId(url) {
   try {
