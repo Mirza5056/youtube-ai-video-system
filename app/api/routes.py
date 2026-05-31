@@ -14,6 +14,7 @@ from app.services.pinecode_db import index
 from groq import Groq
 from dotenv import load_dotenv
 import os
+import uuid
 # import chromadb
 
 load_dotenv()
@@ -65,13 +66,13 @@ async def process_video(data: VideoRequest):
         # yt = YouTube(data.url)
 
         # caption = get_captions(data.url)
-        
+        vector_id = str(uuid.uuid4())
         chunks,embeddings = create_embeddings(data.url)
         for i, chunk in enumerate(chunks):
             index.upsert(
                 vectors=[
                 {
-                    "id": f"{title}_{i}",
+                    "id": vector_id,
                     "values": embeddings[i],
                         "metadata": {
                         "text": chunk,
