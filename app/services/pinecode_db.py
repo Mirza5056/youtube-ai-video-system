@@ -6,4 +6,4 @@ load_dotenv()
 pc = Pinecone(
     api_key=os.getenv("PINECONE_API_KEY")
 )
-index = pc.Index("youtube-rag")
+index = pc.Index("youtube-rag-786")
