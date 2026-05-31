@@ -780,7 +780,7 @@ export default function YouTubeSummarizer() {
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               // onKeyDown={handleKeyDown}
-              onKeyDown={(e)=> e.key == "Enter" && handleSummarize()}
+              onKeyDown={(e)=> e.key === "Enter" && handleSummarize()}
               disabled={loading}
               autoComplete="off"
               spellCheck="false"
