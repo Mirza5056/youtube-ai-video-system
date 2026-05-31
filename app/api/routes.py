@@ -14,13 +14,13 @@ from app.services.pinecode_db import index
 from groq import Groq
 from dotenv import load_dotenv
 import os
-import chromadb
+# import chromadb
 
 load_dotenv()
 client1 = Groq(
     api_key = os.getenv("GROQ_API_KEY")
 )
-client = chromadb.Client()
+# client = chromadb.Client()
 collection = client.create_collection("youtube-rag")
 # model = SentenceTransformer("BAAI/bge-small-en-v1.5")
 router = APIRouter()
