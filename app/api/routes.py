@@ -72,10 +72,11 @@ async def process_video(data: VideoRequest):
             index.upsert(
                 vectors=[
                 {
-                    "id": vector_id,
+                    "id": f"{title}_{i}_{uuid.uuid4()}",
                     "values": embeddings[i],
                         "metadata": {
                         "text": chunk,
+                        "video_url" : data.url,
                         "title": title
                     }
                 }
@@ -128,24 +129,24 @@ async def process_video(data: VideoRequest):
 @router.post("/ask-question")
 async def ask_question(data : QuestionsRequest):
     try:
-        chunks,embeddings = create_embeddings(data.video_url)
-        for i,chunk in enumerate(chunks):
-            # collection.add(documents=[chunk],embeddings=[embeddings[i]],
-            # ids=[f"{data.video_url}_{i}"]
-            # )
-            # above code is used chromadb and using pincone
-            index.upsert(
-                vectors=[
-                    {
-                        "id": f"{data.video_url}_{i}",
-                        "values": embeddings[i],
-                        "metadata": {
-                            "text": chunk,
-                            "video_url": data.video_url
-                        }
-                    }
-                ]
-            )
+        # chunks,embeddings = create_embeddings(data.video_url)
+        # for i,chunk in enumerate(chunks):
+        #     # collection.add(documents=[chunk],embeddings=[embeddings[i]],
+        #     # ids=[f"{data.video_url}_{i}"]
+        #     # )
+        #     # above code is used chromadb and using pincone
+        #     index.upsert(
+        #         vectors=[
+        #             {
+        #                 "id": f"{data.video_url}_{i}",
+        #                 "values": embeddings[i],
+        #                 "metadata": {
+        #                     "text": chunk,
+        #                     "video_url": data.video_url
+        #                 }
+        #             }
+        #         ]
+        #     )
 
         query_embedding = get_embeddings(data.query)
         # results = collection.query(
@@ -155,7 +156,10 @@ async def ask_question(data : QuestionsRequest):
         results = index.query(
             vector=query_embedding,
             top_k=3,
-            include_metadata=True
+            include_metadata=True,
+            filter = {
+                "video_url" : data.video_url
+            }
         )
         # documents = results["documents"][0]
         # context = "\n".join(documents)
